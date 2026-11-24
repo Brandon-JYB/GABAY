@@ -21,14 +21,22 @@ class AuthController extends ChangeNotifier {
 
   Future<bool> register({
     required String fullName,
+    required DateTime birthDate,
+    required String genderStatus,
+    required String address,
     required String email,
     required String password,
   }) {
-    return _run(() => _repository.register(
-          fullName: fullName,
-          email: email,
-          password: password,
-        ));
+    return _run(
+          () => _repository.register(
+        fullName: fullName,
+        birthDate: birthDate,
+        genderStatus: genderStatus,
+        address: address,
+        email: email,
+        password: password,
+      ),
+    );
   }
 
   Future<void> logout() async {

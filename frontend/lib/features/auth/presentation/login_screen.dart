@@ -31,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
     FocusScope.of(context).unfocus();
 
     final ok = await auth.login(
-      email: _emailCtrl.text,
+      email: _emailCtrl.text.trim(),
       password: _passwordCtrl.text,
     );
     if (!mounted || !ok) return;
@@ -104,11 +104,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: auth.isLoading ? null : _submit,
                         child: auth.isLoading
                             ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              )
+                          height: 20,
+                          width: 20,
+                          child:
+                          CircularProgressIndicator(strokeWidth: 2),
+                        )
                             : const Text('Log in'),
                       ),
                       const SizedBox(height: 8),
@@ -116,7 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: auth.isLoading
                             ? null
                             : () => Navigator.of(context)
-                                .pushNamed(AppRoutes.register),
+                            .pushNamed(AppRoutes.register),
                         child: const Text('Create an account'),
                       ),
                     ],

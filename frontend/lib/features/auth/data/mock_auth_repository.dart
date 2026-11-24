@@ -19,6 +19,9 @@ class MockAuthRepository implements AuthRepository {
   @override
   Future<AuthUser> register({
     required String fullName,
+    required DateTime birthDate,
+    required String genderStatus,
+    required String address,
     required String email,
     required String password,
   }) async {
@@ -30,6 +33,9 @@ class MockAuthRepository implements AuthRepository {
     final user = AuthUser(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       fullName: fullName.trim(),
+      birthDate: birthDate,
+      genderStatus: genderStatus.trim(),
+      address: address.trim(),
       email: key,
     );
     _accounts[key] = _Account(user, password);
