@@ -8,15 +8,19 @@ class AuthException implements Exception {
   String toString() => message;
 }
 
-/// The only thing the rest of the app knows about authentication.
-/// Implement this against whichever backend you choose.
 abstract class AuthRepository {
   AuthUser? get currentUser;
 
-  Future<AuthUser> login({required String email, required String password});
-
   Future<AuthUser> register({
     required String fullName,
+    required DateTime birthDate,
+    required String genderStatus,
+    required String address,
+    required String email,
+    required String password,
+  });
+
+  Future<AuthUser> login({
     required String email,
     required String password,
   });

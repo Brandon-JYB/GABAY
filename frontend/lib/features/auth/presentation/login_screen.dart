@@ -31,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
     FocusScope.of(context).unfocus();
 
     final ok = await auth.login(
-      email: _emailCtrl.text,
+      email: _emailCtrl.text.trim(),
       password: _passwordCtrl.text,
     );
     if (!mounted || !ok) return;

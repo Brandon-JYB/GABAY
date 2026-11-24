@@ -1,27 +1,32 @@
 import 'package:flutter/material.dart';
 
 class AuthErrorBanner extends StatelessWidget {
-  const AuthErrorBanner({super.key, required this.message});
+  const AuthErrorBanner({
+    super.key,
+    required this.message,
+  });
 
   final String message;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: scheme.errorContainer,
+        color: colorScheme.errorContainer,
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: colorScheme.error),
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline, color: scheme.onErrorContainer),
-          const SizedBox(width: 8),
+          Icon(Icons.error_outline, color: colorScheme.onErrorContainer),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               message,
-              style: TextStyle(color: scheme.onErrorContainer),
+              style: TextStyle(color: colorScheme.onErrorContainer),
             ),
           ),
         ],
