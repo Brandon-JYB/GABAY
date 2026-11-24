@@ -2,7 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../domain/user_profile.dart';
 
-/// Reads and writes the signed-in user's row in the `profiles` table.
+/// Reads and writes the signed-in user's row in the `users` table.
 class ProfileRepository {
   ProfileRepository(this._client);
 
@@ -13,7 +13,7 @@ class ProfileRepository {
     if (id == null) return const UserProfile();
 
     final row =
-    await _client.from('profiles').select().eq('id', id).maybeSingle();
+    await _client.from('users').select().eq('id', id).maybeSingle();
     if (row == null) return const UserProfile();
 
     final birthday = row['birthday'] as String?;
@@ -35,8 +35,9 @@ class ProfileRepository {
     final id = _client.auth.currentUser?.id;
     if (id == null) throw StateError('Not signed in');
 
-    await _client.from('profiles').upsert({
+    await _client.from('users').upsert({
       'id': id,
+      'email': _client.auth.currentUser?.email,
       'full_name': _nullIfEmpty(p.name),
       'birthday': p.birthday == null ? null : _dateOnly(p.birthday!),
       'gender': p.gender,
