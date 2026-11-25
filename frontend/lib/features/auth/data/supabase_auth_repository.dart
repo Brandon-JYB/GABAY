@@ -24,7 +24,7 @@ class SupabaseAuthRepository implements AuthRepository {
       email: user.email ?? '',
       fullName: (m['full_name'] as String?) ?? '',
       birthday: birthday,
-      gender: (m['gender'] as String?) ?? '',
+      gender: (m['gender_status'] as String?) ?? '',
       barangay: (m['barangay'] as String?) ?? '',
       sitio: m['sitio'] as String?,
     );
@@ -59,7 +59,7 @@ class SupabaseAuthRepository implements AuthRepository {
       email: row['email'] as String,
       fullName: row['full_name'] as String,
       birthday: DateTime.parse(row['birthday'] as String),
-      gender: row['gender'] as String,
+      gender: row['gender_status'] as String,
       barangay: row['barangay'] as String,
       sitio: row['sitio'] as String?,
       civilStatus: row['civil_status'] as String?,
@@ -131,7 +131,7 @@ class SupabaseAuthRepository implements AuthRepository {
         data: {
           'full_name': fullName.trim(),
           'birthday': birthday,
-          'gender': genderStatus,
+          'gender_status': genderStatus,
           'sitio': loc.sitio,
           'barangay': loc.barangay,
         },

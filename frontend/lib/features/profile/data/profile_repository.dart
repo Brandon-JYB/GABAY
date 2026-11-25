@@ -20,14 +20,11 @@ class ProfileRepository {
     return UserProfile(
       name: (row['full_name'] as String?) ?? '',
       birthday: birthday == null ? null : DateTime.parse(birthday),
-      gender: row['gender'] as String?,
+      gender: row['gender_status'] as String?,
       civilStatus: row['civil_status'] as String?,
       sitio: (row['sitio'] as String?) ?? '',
       barangay: (row['barangay'] as String?) ?? '',
       // Register only collects sitio and barangay (the city is always
-      // Batangas City), so fall back to the fixed city and province.
-      city: _orDefault(row['city_municipality'] as String?, 'Batangas City'),
-      province: _orDefault(row['province'] as String?, 'Batangas'),
       isPhilhealth: row['is_philhealth_member'] as bool?,
       isPwd: row['is_pwd'] as bool?,
     );
@@ -42,12 +39,10 @@ class ProfileRepository {
       'email': _client.auth.currentUser?.email,
       'full_name': _nullIfEmpty(p.name),
       'birthday': p.birthday == null ? null : _dateOnly(p.birthday!),
-      'gender': p.gender,
+      'gender_status': p.gender,
       'civil_status': p.civilStatus,
       'sitio': _nullIfEmpty(p.sitio),
       'barangay': _nullIfEmpty(p.barangay),
-      'city_municipality': _nullIfEmpty(p.city),
-      'province': _nullIfEmpty(p.province),
       'is_philhealth_member': p.isPhilhealth,
       'is_pwd': p.isPwd,
     });

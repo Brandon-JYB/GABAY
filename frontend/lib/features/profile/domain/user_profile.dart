@@ -23,8 +23,6 @@ class UserProfile {
     this.civilStatus,
     this.sitio = '',
     this.barangay = '',
-    this.city = '',
-    this.province = '',
     this.isPhilhealth,
     this.isPwd,
   });
@@ -40,8 +38,6 @@ class UserProfile {
 
   final String sitio;
   final String barangay;
-  final String city;
-  final String province;
 
   /// PhilHealth member or beneficiary? null = not answered yet.
   final bool? isPhilhealth;
@@ -57,8 +53,6 @@ class UserProfile {
           civilStatus == other.civilStatus &&
           sitio == other.sitio &&
           barangay == other.barangay &&
-          city == other.city &&
-          province == other.province &&
           isPhilhealth == other.isPhilhealth &&
           isPwd == other.isPwd;
 
@@ -86,9 +80,7 @@ class UserProfile {
         civilStatus == null) {
       pending.add(SetupStep.personal);
     }
-    if (barangay.trim().isEmpty ||
-        city.trim().isEmpty ||
-        province.trim().isEmpty) {
+    if (barangay.trim().isEmpty){
       pending.add(SetupStep.address);
     }
     if (isPhilhealth == null || isPwd == null) {

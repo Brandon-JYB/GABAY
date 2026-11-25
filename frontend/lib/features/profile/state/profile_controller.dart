@@ -21,7 +21,7 @@ class ProfileController extends ChangeNotifier {
     try {
       _profile = await _repository.fetch();
       debugPrint(
-          'PROFILE LOADED: name="${_profile.name}" barangay="${_profile.barangay}" city="${_profile.city}"');
+          'PROFILE LOADED: name="${_profile.name}" barangay="${_profile.barangay}"');
     } catch (e, st) {
       // Keep the empty profile; the user can still fill it in.
       debugPrint('PROFILE LOAD ERROR: $e\n$st');

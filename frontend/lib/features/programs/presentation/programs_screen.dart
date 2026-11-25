@@ -9,6 +9,7 @@ import '../domain/program_matcher.dart';
 import '../state/programs_controller.dart';
 import '../state/saved_programs_controller.dart';
 import 'program_detail_screen.dart';
+import '../../../core/city_barangays.dart';
 
 /// Programs tab: search, filter by level, and open a program's details.
 class ProgramsScreen extends StatefulWidget {
@@ -479,7 +480,7 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
               _viewChips(context, saved),
               if (_view == _ProgramView.recent && saved.recentKeys.isNotEmpty)
                 _selectionBar(context, saved, results),
-              if (_matchProfile && matcher.isProfileEmpty)
+              if (_matchProfile)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(

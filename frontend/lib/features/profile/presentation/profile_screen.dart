@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../../core/city_barangays.dart';
 import 'package:flutter/services.dart';
 
-import '../../../core/city_barangays.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/validators.dart';
@@ -9,8 +9,6 @@ import '../../auth/state/auth_scope.dart';
 import '../domain/user_profile.dart';
 import '../state/profile_controller.dart';
 
-/// Opens from the button at the top right of Home. Loads the saved profile,
-/// saves to Supabase, and handles logout.
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
@@ -39,7 +37,6 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
-/// The form itself. Pass [initial] to prefill it, [onSave] to store the result.
 class ProfileForm extends StatefulWidget {
   const ProfileForm({
     super.key,
@@ -58,10 +55,7 @@ class ProfileForm extends StatefulWidget {
 
 class _ProfileFormState extends State<ProfileForm> {
   static const List<String> _genderOptions = ['Male', 'Female'];
-  static const String _cityValue = 'Batangas City';
-  static const String _provinceValue = 'Batangas';
 
-  /// Matches a saved gender to the dropdown options, ignoring letter case.
   static String? _matchGender(String? g) {
     if (g == null) return null;
     for (final o in _genderOptions) {
@@ -75,31 +69,24 @@ class _ProfileFormState extends State<ProfileForm> {
   late final _name = TextEditingController(text: widget.initial.name);
   late final _sitio = TextEditingController(text: widget.initial.sitio);
   late final _barangay = TextEditingController(text: widget.initial.barangay);
-  late final _city = TextEditingController(
-      text: widget.initial.city.isEmpty ? _cityValue : widget.initial.city);
-  late final _province = TextEditingController(
-      text: widget.initial.province.isEmpty
-          ? _provinceValue
-          : widget.initial.province);
 
   late DateTime? _birthday = widget.initial.birthday;
   late final _birthdayCtrl = TextEditingController(
-      text: widget.initial.birthday == null
-          ? ''
-          : _formatDate(widget.initial.birthday!));
+    text: widget.initial.birthday == null
+        ? ''
+        : _formatDate(widget.initial.birthday!),
+  );
   late String? _gender = _matchGender(widget.initial.gender);
   late String? _civil = widget.initial.civilStatus;
-  // Not shown on screen anymore; kept so saving doesn't erase the stored value.
   late final bool? _philhealth = widget.initial.isPhilhealth;
   late bool? _pwd = widget.initial.isPwd;
 
-  /// What was last saved. Anything different from this counts as unsaved.
   late UserProfile _saved = _current;
   bool _saving = false;
 
   @override
   void dispose() {
-    for (final c in [_name, _sitio, _barangay, _city, _province, _birthdayCtrl]) {
+    for (final c in [_name, _sitio, _barangay, _birthdayCtrl]) {
       c.dispose();
     }
     super.dispose();
@@ -111,9 +98,9 @@ class _ProfileFormState extends State<ProfileForm> {
     gender: _gender,
     civilStatus: _civil,
     sitio: _sitio.text.trim(),
-    barangay: BatangasCityBarangays.normalizeBarangay(_barangay.text.trim()),
-    city: _city.text.trim(),
-    province: _province.text.trim(),
+    barangay: BatangasCityBarangays.normalizeBarangay(
+      _barangay.text.trim(),
+    ),
     isPhilhealth: _philhealth,
     isPwd: _pwd ?? false,
   );
@@ -125,7 +112,9 @@ class _ProfileFormState extends State<ProfileForm> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
         title: Text(
           dialogContext.tr('discardTitle'),
           style: const TextStyle(
@@ -135,12 +124,17 @@ class _ProfileFormState extends State<ProfileForm> {
         ),
         content: Text(
           dialogContext.tr('discardBody'),
-          style: const TextStyle(color: AppColors.textMuted, height: 1.4),
+          style: const TextStyle(
+            color: AppColors.textMuted,
+            height: 1.4,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            style: TextButton.styleFrom(foregroundColor: AppColors.deepSpace),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.deepSpace,
+            ),
             child: Text(dialogContext.tr('keepEditing')),
           ),
           TextButton(
@@ -161,7 +155,9 @@ class _ProfileFormState extends State<ProfileForm> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
         title: Text(
           dialogContext.tr('logoutConfirmTitle'),
           style: const TextStyle(
@@ -173,12 +169,17 @@ class _ProfileFormState extends State<ProfileForm> {
           _isDirty
               ? dialogContext.tr('discardBody')
               : dialogContext.tr('logoutConfirmBody'),
-          style: const TextStyle(color: AppColors.textMuted, height: 1.4),
+          style: const TextStyle(
+            color: AppColors.textMuted,
+            height: 1.4,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            style: TextButton.styleFrom(foregroundColor: AppColors.deepSpace),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.deepSpace,
+            ),
             child: Text(dialogContext.tr('cancel')),
           ),
           TextButton(
@@ -193,6 +194,7 @@ class _ProfileFormState extends State<ProfileForm> {
     );
     return confirm ?? false;
   }
+
   String? _required(String? v) =>
       (v == null || v.trim().isEmpty) ? context.tr('required') : null;
 
@@ -203,18 +205,22 @@ class _ProfileFormState extends State<ProfileForm> {
     return '$y-$m-$day';
   }
 
-  /// Calendar with month and year dropdowns, so both can be picked directly.
   Future<void> _pickBirthday() async {
     const english = [
       'January', 'February', 'March', 'April', 'May', 'June', 'July',
       'August', 'September', 'October', 'November', 'December',
     ];
+
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     var initial = _birthday ?? DateTime(now.year - 30, now.month, now.day);
     if (initial.isAfter(today)) initial = today;
 
-    var months = context.tr('months').split(',').map((m) => m.trim()).toList();
+    var months = context.tr('months')
+        .split(',')
+        .map((m) => m.trim())
+        .toList();
+
     if (months.length != 12) months = english;
 
     final picked = await showDialog<DateTime>(
@@ -225,7 +231,9 @@ class _ProfileFormState extends State<ProfileForm> {
         months: months,
       ),
     );
+
     if (picked == null || !mounted) return;
+
     setState(() {
       _birthday = picked;
       _birthdayCtrl.text = _formatDate(picked);
@@ -243,6 +251,7 @@ class _ProfileFormState extends State<ProfileForm> {
     final profile = _current;
 
     setState(() => _saving = true);
+
     try {
       await onSave(profile);
       if (!mounted) return;
@@ -263,12 +272,17 @@ class _ProfileFormState extends State<ProfileForm> {
     await onLogout();
   }
 
-  InputDecoration _decoration(String label,
-      {IconData? icon, String? hint, Widget? suffix}) {
+  InputDecoration _decoration(
+      String label, {
+        IconData? icon,
+        String? hint,
+        Widget? suffix,
+      }) {
     OutlineInputBorder border(Color color) => OutlineInputBorder(
       borderRadius: BorderRadius.circular(16),
       borderSide: BorderSide(color: color),
     );
+
     return InputDecoration(
       labelText: label,
       hintText: hint,
@@ -282,18 +296,6 @@ class _ProfileFormState extends State<ProfileForm> {
     );
   }
 
-  Widget _textField(String label, TextEditingController controller,
-      {bool required = true, TextCapitalization caps = TextCapitalization.words}) {
-    return TextFormField(
-      controller: controller,
-      textCapitalization: caps,
-      decoration: _decoration(label),
-      validator: required ? _required : null,
-    );
-  }
-
-  /// Same look as the barangay field: type to filter or tap the arrow to see
-  /// every option. Only the listed options are accepted.
   Widget _choiceField({
     required String label,
     required IconData icon,
@@ -322,7 +324,6 @@ class _ProfileFormState extends State<ProfileForm> {
       optionsBuilder: (TextEditingValue input) {
         final all = [for (final o in options) o.label];
         final q = input.text.trim().toLowerCase();
-        // Show everything when empty or when a full option is already chosen.
         if (q.isEmpty || match(input.text) != null) return all;
         return all.where((l) => l.toLowerCase().contains(q));
       },
@@ -358,7 +359,10 @@ class _ProfileFormState extends State<ProfileForm> {
             elevation: 4,
             borderRadius: BorderRadius.circular(8),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 260, maxWidth: 420),
+              constraints: const BoxConstraints(
+                maxHeight: 260,
+                maxWidth: 420,
+              ),
               child: ListView.builder(
                 padding: EdgeInsets.zero,
                 shrinkWrap: true,
@@ -404,7 +408,6 @@ class _ProfileFormState extends State<ProfileForm> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
               children: [
-                // Top right, inside the list, so it scrolls away with the page.
                 if (widget.onLogout != null)
                   Align(
                     alignment: Alignment.centerRight,
@@ -427,11 +430,15 @@ class _ProfileFormState extends State<ProfileForm> {
                   textCapitalization: TextCapitalization.words,
                   textInputAction: TextInputAction.next,
                   inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r"[A-Za-z\s.'-]")),
+                    FilteringTextInputFormatter.allow(
+                      RegExp(r"[A-Za-z\s.'-]"),
+                    ),
                   ],
                   validator: Validators.fullName,
-                  decoration: _decoration(context.tr('fullName'),
-                      icon: Icons.person_outline),
+                  decoration: _decoration(
+                    context.tr('fullName'),
+                    icon: Icons.person_outline,
+                  ),
                 ),
                 gap,
                 TextFormField(
@@ -458,10 +465,11 @@ class _ProfileFormState extends State<ProfileForm> {
                 ),
                 gap,
                 _choiceField(
-                  label: context.tr('gender'),
+                  label: context.tr('gender_status'),
                   icon: Icons.wc_outlined,
                   options: [
-                    for (final g in _genderOptions) (value: g, label: g),
+                    for (final g in _genderOptions)
+                      (value: g, label: g),
                   ],
                   value: _gender,
                   onChanged: (v) => setState(() => _gender = v),
@@ -482,7 +490,8 @@ class _ProfileFormState extends State<ProfileForm> {
                   ],
                   value: _civil,
                   onChanged: (v) => setState(() => _civil = v),
-                  validator: (v) => v == null ? context.tr('chooseOne') : null,
+                  validator: (v) =>
+                  v == null ? context.tr('chooseOne') : null,
                 ),
                 const SizedBox(height: 28),
                 _SectionLabel(context.tr('address')),
@@ -492,15 +501,17 @@ class _ProfileFormState extends State<ProfileForm> {
                   textInputAction: TextInputAction.next,
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(
-                        RegExp(r'[A-Za-z0-9\s#.,/-]')),
+                      RegExp(r'[A-Za-z0-9\s#.,/-]'),
+                    ),
                   ],
-                  // Optional: validate only if filled in.
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) return null;
                     return Validators.streetDetail(value);
                   },
-                  decoration: _decoration(context.tr('sitio'),
-                      icon: Icons.home_outlined),
+                  decoration: _decoration(
+                    context.tr('sitio'),
+                    icon: Icons.home_outlined,
+                  ),
                 ),
                 gap,
                 Autocomplete<String>(
@@ -521,7 +532,8 @@ class _ProfileFormState extends State<ProfileForm> {
                       textInputAction: TextInputAction.next,
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(
-                            RegExp(r'[A-Za-z0-9\s.()-]')),
+                          RegExp(r'[A-Za-z0-9\s.()-]'),
+                        ),
                       ],
                       validator: Validators.barangay,
                       onChanged: (v) => _barangay.text = v,
@@ -535,7 +547,8 @@ class _ProfileFormState extends State<ProfileForm> {
                           icon: const Icon(Icons.arrow_drop_down),
                           onPressed: () {
                             focusNode.requestFocus();
-                            controller.value = const TextEditingValue(text: '');
+                            controller.value =
+                            const TextEditingValue(text: '');
                             setState(() => _barangay.text = '');
                           },
                         ),
@@ -576,13 +589,6 @@ class _ProfileFormState extends State<ProfileForm> {
                   },
                 ),
                 gap,
-                TextFormField(
-                  controller: _city,
-                  readOnly: true,
-                  decoration: _decoration(context.tr('city'),
-                      icon: Icons.map_outlined)
-                      .copyWith(helperText: context.tr('addressFixedNote')),
-                ),
                 const SizedBox(height: 28),
                 _SectionLabel(
                   context.tr('assistanceInfo'),
@@ -609,11 +615,17 @@ class _ProfileFormState extends State<ProfileForm> {
                     width: 22,
                     height: 22,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2.5, color: Colors.white),
+                      strokeWidth: 2.5,
+                      color: Colors.white,
+                    ),
                   )
-                      : Text(context.tr('save'),
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w700)),
+                      : Text(
+                    context.tr('save'),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -626,6 +638,7 @@ class _ProfileFormState extends State<ProfileForm> {
 
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel(this.text, {this.icon});
+
   final String text;
   final IconData? icon;
 
@@ -655,7 +668,6 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-/// Read-only card: age and senior status come from the birthday.
 class _AutoInfo extends StatelessWidget {
   const _AutoInfo({
     required this.ageLabel,
@@ -677,16 +689,22 @@ class _AutoInfo extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style: const TextStyle(
-                  fontSize: 12, color: AppColors.textMuted)),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textMuted,
+            ),
+          ),
           const SizedBox(height: 2),
-          Text(value,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.phthalo,
-              )),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: AppColors.phthalo,
+            ),
+          ),
         ],
       ),
     );
@@ -705,16 +723,19 @@ class _AutoInfo extends StatelessWidget {
             stat(seniorLabel, seniorValue),
           ]),
           const SizedBox(height: 8),
-          Text(caption,
-              style:
-              const TextStyle(fontSize: 12, color: AppColors.textMuted)),
+          Text(
+            caption,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textMuted,
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-/// A tappable card with an icon, a title, a short hint and an on/off switch.
 class _SwitchCard extends StatelessWidget {
   const _SwitchCard({
     required this.icon,
@@ -800,7 +821,6 @@ class _SwitchCard extends StatelessWidget {
   }
 }
 
-/// A calendar where the month and the year are chosen from dropdowns.
 class _BirthdayDialog extends StatefulWidget {
   const _BirthdayDialog({
     required this.initial,
@@ -825,13 +845,11 @@ class _BirthdayDialogState extends State<_BirthdayDialog> {
 
   int get _daysInMonth => DateUtils.getDaysInMonth(_year, _month);
 
-  /// Empty cells before the 1st, with weeks starting on Sunday.
   int get _leadingBlanks => DateTime(_year, _month, 1).weekday % 7;
 
   bool _isFuture(int day) =>
       DateTime(_year, _month, day).isAfter(widget.today);
 
-  /// Keeps month and day valid after the year or month changes.
   void _fix() {
     if (_year == widget.today.year && _month > widget.today.month) {
       _month = widget.today.month;
@@ -844,9 +862,11 @@ class _BirthdayDialogState extends State<_BirthdayDialog> {
   Widget build(BuildContext context) {
     final lastMonth =
     _year == widget.today.year ? widget.today.month : 12;
+
     final years = [
       for (var y = widget.today.year; y >= _firstYear; y--) y,
     ];
+
     final weekdays = MaterialLocalizations.of(context).narrowWeekdays;
     final l10n = MaterialLocalizations.of(context);
 
@@ -890,8 +910,13 @@ class _BirthdayDialogState extends State<_BirthdayDialog> {
 
     return Dialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: 20,
+        vertical: 24,
+      ),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 360),
         child: Padding(
@@ -908,7 +933,9 @@ class _BirthdayDialogState extends State<_BirthdayDialog> {
                       items: [
                         for (var m = 1; m <= lastMonth; m++)
                           DropdownMenuItem(
-                              value: m, child: Text(widget.months[m - 1])),
+                            value: m,
+                            child: Text(widget.months[m - 1]),
+                          ),
                       ],
                       onChanged: (m) {
                         if (m == null) return;
@@ -926,7 +953,10 @@ class _BirthdayDialogState extends State<_BirthdayDialog> {
                       value: _year,
                       items: [
                         for (final y in years)
-                          DropdownMenuItem(value: y, child: Text('$y')),
+                          DropdownMenuItem(
+                            value: y,
+                            child: Text('$y'),
+                          ),
                       ],
                       onChanged: (y) {
                         if (y == null) return;
@@ -971,14 +1001,16 @@ class _BirthdayDialogState extends State<_BirthdayDialog> {
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     style: TextButton.styleFrom(
-                        foregroundColor: AppColors.textMuted),
+                      foregroundColor: AppColors.textMuted,
+                    ),
                     child: Text(l10n.cancelButtonLabel),
                   ),
                   TextButton(
                     onPressed: () => Navigator.of(context)
                         .pop(DateTime(_year, _month, _day)),
                     style: TextButton.styleFrom(
-                        foregroundColor: AppColors.deepSpace),
+                      foregroundColor: AppColors.deepSpace,
+                    ),
                     child: Text(
                       l10n.okButtonLabel,
                       style: const TextStyle(fontWeight: FontWeight.w700),
@@ -993,7 +1025,11 @@ class _BirthdayDialogState extends State<_BirthdayDialog> {
     );
   }
 
-  Widget _dayCell(int day, {required bool selected, required bool enabled}) {
+  Widget _dayCell(
+      int day, {
+        required bool selected,
+        required bool enabled,
+      }) {
     return Padding(
       padding: const EdgeInsets.all(2),
       child: InkWell(
