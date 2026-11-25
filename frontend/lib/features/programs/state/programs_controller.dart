@@ -12,14 +12,12 @@ class ProgramsController extends ChangeNotifier {
   List<Program> _programs = const [];
   bool _isLoading = false;
   bool _hasError = false;
-  String? _errorDetail;
+  bool _isOfflineError = false;
 
   List<Program> get programs => _programs;
   bool get isLoading => _isLoading;
   bool get hasError => _hasError;
-
-  /// The raw error text. Only shown in debug builds, to find out why loading failed.
-  String? get errorDetail => _errorDetail;
+  bool get isOfflineError => _isOfflineError;
 
   /// Distinct governance levels, in the order they first appear.
   List<String> get levels => _programs.map((p) => p.level).toSet().toList();
@@ -28,13 +26,17 @@ class ProgramsController extends ChangeNotifier {
     if (_isLoading) return;
     _isLoading = true;
     _hasError = false;
-    _errorDetail = null;
+    _isOfflineError = false;
     notifyListeners();
     try {
       _programs = await _repository.fetchAll();
     } catch (e) {
       _hasError = true;
-      _errorDetail = e.toString();
+      final raw = e.toString().toLowerCase();
+      _isOfflineError = raw.contains('socketexception') ||
+          raw.contains('failed host lookup') ||
+          raw.contains('network is unreachable') ||
+          raw.contains('connection failed');
       debugPrint('Programs load failed: $e');
     } finally {
       _isLoading = false;

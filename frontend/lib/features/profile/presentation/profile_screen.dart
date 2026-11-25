@@ -156,6 +156,43 @@ class _ProfileFormState extends State<ProfileForm> {
     return discard ?? false;
   }
 
+  Future<bool> _confirmLogout() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          dialogContext.tr('logoutConfirmTitle'),
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            color: AppColors.phthalo,
+          ),
+        ),
+        content: Text(
+          _isDirty
+              ? dialogContext.tr('discardBody')
+              : dialogContext.tr('logoutConfirmBody'),
+          style: const TextStyle(color: AppColors.textMuted, height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            style: TextButton.styleFrom(foregroundColor: AppColors.deepSpace),
+            child: Text(dialogContext.tr('cancel')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(dialogContext).colorScheme.error,
+            ),
+            child: Text(dialogContext.tr('logout')),
+          ),
+        ],
+      ),
+    );
+    return confirm ?? false;
+  }
   String? _required(String? v) =>
       (v == null || v.trim().isEmpty) ? context.tr('required') : null;
 
@@ -221,7 +258,8 @@ class _ProfileFormState extends State<ProfileForm> {
   Future<void> _logout() async {
     final onLogout = widget.onLogout;
     if (onLogout == null) return;
-    if (_isDirty && !await _confirmDiscard()) return;
+    if (!await _confirmLogout()) return;
+    if (!mounted) return;
     await onLogout();
   }
 

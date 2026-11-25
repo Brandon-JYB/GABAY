@@ -1,6 +1,4 @@
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
-
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/skeleton.dart';
@@ -398,10 +396,9 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
       return [
         _EmptyState(
           icon: Icons.cloud_off_rounded,
-          message: context.tr('programsLoadFailed') +
-              (kDebugMode && c.errorDetail != null
-                  ? '\n\n[debug] ${c.errorDetail}'
-                  : ''),
+          message: context.tr(
+            c.isOfflineError ? 'programsOffline' : 'programsLoadFailed',
+          ),
           actionLabel: context.tr('retry'),
           onAction: c.load,
         ),
