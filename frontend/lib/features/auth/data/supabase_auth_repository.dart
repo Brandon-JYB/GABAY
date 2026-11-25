@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../domain/auth_repository.dart';
 import '../domain/auth_user.dart';
+import 'package:flutter/foundation.dart';
 
 /// Real backend for AuthRepository, using Supabase Auth.
 class SupabaseAuthRepository implements AuthRepository {
@@ -79,7 +80,8 @@ class SupabaseAuthRepository implements AuthRepository {
       rethrow;
     } on sb.AuthException catch (e) {
       throw AuthException(_friendly(e.message));
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('LOGIN ERROR: ${e.runtimeType}: $e\n$st');
       throw const AuthException(
           'Could not reach the server. Check your connection and try again.');
     }
@@ -124,7 +126,8 @@ class SupabaseAuthRepository implements AuthRepository {
       rethrow;
     } on sb.AuthException catch (e) {
       throw AuthException(_friendly(e.message));
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('REGISTER ERROR: ${e.runtimeType}: $e\n$st');
       throw const AuthException(
           'Could not reach the server. Check your connection and try again.');
     }

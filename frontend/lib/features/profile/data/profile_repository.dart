@@ -2,7 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../domain/user_profile.dart';
 
-/// Reads and writes the signed-in user's row in the `profiles` table.
+/// Reads and writes the signed-in user's row in the `users` table.
 class ProfileRepository {
   ProfileRepository(this._client);
 
@@ -13,7 +13,7 @@ class ProfileRepository {
     if (id == null) return const UserProfile();
 
     final row =
-    await _client.from('profiles').select().eq('id', id).maybeSingle();
+    await _client.from('users').select().eq('id', id).maybeSingle();
     if (row == null) return const UserProfile();
 
     final birthday = row['birthday'] as String?;
@@ -24,8 +24,10 @@ class ProfileRepository {
       civilStatus: row['civil_status'] as String?,
       sitio: (row['sitio'] as String?) ?? '',
       barangay: (row['barangay'] as String?) ?? '',
-      city: (row['city_municipality'] as String?) ?? '',
-      province: (row['province'] as String?) ?? '',
+      // Register only collects sitio and barangay (the city is always
+      // Batangas City), so fall back to the fixed city and province.
+      city: _orDefault(row['city_municipality'] as String?, 'Batangas City'),
+      province: _orDefault(row['province'] as String?, 'Batangas'),
       isPhilhealth: row['is_philhealth_member'] as bool?,
       isPwd: row['is_pwd'] as bool?,
     );
@@ -35,8 +37,9 @@ class ProfileRepository {
     final id = _client.auth.currentUser?.id;
     if (id == null) throw StateError('Not signed in');
 
-    await _client.from('profiles').upsert({
+    await _client.from('users').upsert({
       'id': id,
+      'email': _client.auth.currentUser?.email,
       'full_name': _nullIfEmpty(p.name),
       'birthday': p.birthday == null ? null : _dateOnly(p.birthday!),
       'gender': p.gender,
@@ -49,6 +52,9 @@ class ProfileRepository {
       'is_pwd': p.isPwd,
     });
   }
+
+  String _orDefault(String? v, String fallback) =>
+      (v == null || v.trim().isEmpty) ? fallback : v.trim();
 
   String? _nullIfEmpty(String v) => v.trim().isEmpty ? null : v.trim();
 
