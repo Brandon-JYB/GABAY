@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import '../../features/auth/state/auth_scope.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/profile/state/profile_controller.dart';
+import '../../features/programs/state/programs_controller.dart';
 import '../../features/programs/presentation/programs_screen.dart';
 import '../l10n/app_strings.dart';
 import '../theme/app_theme.dart';
+import 'app_tutorial.dart';
+import 'language_toggle.dart';
 
 /// Shared layout for the main tabs: Home, Programs, Ask GABAY.
 /// Profile is not a tab. It opens from the button at the top right of Home.
@@ -22,12 +25,19 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   late int _index = widget.initialIndex;
 
+  /// Bumped by Home's "Check eligibility" so Programs opens with
+  /// "Match my profile" switched on.
+  int _matchRequest = 0;
+
   @override
   void initState() {
     super.initState();
     // Load after the first frame so listeners aren't notified mid-build.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) ProfileScope.of(context).load();
+      if (!mounted) return;
+      ProfileScope.of(context).load();
+      ProgramsScope.of(context).load();
+      AppTutorial.showIfFirstTime(context);
     });
   }
 
@@ -40,7 +50,6 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
-    // Replace the placeholder with the real AI screen when it exists.
     final profileName = ProfileScope.of(context).profile.name;
     final accountName = AuthScope.of(context).currentUser?.fullName ?? '';
 
@@ -49,12 +58,16 @@ class _AppShellState extends State<AppShell> {
         userName: _firstName(profileName) ?? _firstName(accountName),
         onProfileTap: widget.onProfileTap,
         onFindPrograms: () => _goTo(1),
-        onCheckEligibility: () => _goTo(1),
+        onCheckEligibility: () => setState(() {
+          _matchRequest++;
+          _index = 1;
+        }),
         onViewAllPrograms: () => _goTo(1),
         onAskGabay: () => _goTo(2),
       ),
-      const ProgramsScreen(),
-      _TabPlaceholder(context.tr('askGabay')),
+      ProgramsScreen(matchProfileRequest: _matchRequest),
+      // Placeholder until the AI chat exists. The FAQ lives on Home's quick actions.
+      const _AskGabayPlaceholder(),
     ];
 
     return Scaffold(
@@ -89,15 +102,58 @@ class _AppShellState extends State<AppShell> {
   }
 }
 
-class _TabPlaceholder extends StatelessWidget {
-  const _TabPlaceholder(this.title);
-  final String title;
+/// Empty Ask GABAY tab. Replace with the AI chat later.
+class _AskGabayPlaceholder extends StatelessWidget {
+  const _AskGabayPlaceholder();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(child: Text(context.tr('comingSoon'))),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      context.tr('askGabay'),
+                      style: const TextStyle(
+                        fontFamily: 'serif',
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.phthalo,
+                      ),
+                    ),
+                  ),
+                  const LanguageToggle(),
+                ],
+              ),
+              const Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.auto_awesome_outlined,
+                          size: 48, color: AppColors.deepSpace),
+                      SizedBox(height: 12),
+                      Text(
+                        'Coming soon',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../domain/auth_repository.dart';
 import '../domain/auth_user.dart';
+import 'package:flutter/foundation.dart';
 
 /// Real backend for AuthRepository, using Supabase Auth.
 class SupabaseAuthRepository implements AuthRepository {
@@ -23,17 +24,33 @@ class SupabaseAuthRepository implements AuthRepository {
       email: user.email ?? '',
       fullName: (m['full_name'] as String?) ?? '',
       birthday: birthday,
-      gender: (m['gender'] as String?) ?? '',
+      gender: (m['gender_status'] as String?) ?? '',
       barangay: (m['barangay'] as String?) ?? '',
       sitio: m['sitio'] as String?,
     );
   }
 
   /// Loads the full row from public.users (includes is_pwd, civil_status, etc.)
-  Future<AuthUser> _loadProfile(String userId) async {
-    final row =
-    await _client.from('users').select().eq('id', userId).single();
-    return _fromRow(row);
+  Future<AuthUser> _loadProfile(sb.User authUser) async {
+    try {
+      final row = await _client
+          .from('users')
+          .select()
+          .eq('id', authUser.id)
+          .maybeSingle();
+      if (row != null) return _fromRow(row);
+    } catch (e, st) {
+      debugPrint('PROFILE LOAD ERROR: ${e.runtimeType}: $e\n$st');
+    }
+
+    // Fallback: build the user from signup metadata.
+    final fallback = _fromMetadata(authUser);
+    if (fallback != null) return fallback;
+
+    // Nothing usable, so don't leave a half-signed-in session behind.
+    await _client.auth.signOut();
+    throw const AuthException(
+        'We could not load your profile. Please try again.');
   }
 
   AuthUser _fromRow(Map<String, dynamic> row) {
@@ -42,7 +59,7 @@ class SupabaseAuthRepository implements AuthRepository {
       email: row['email'] as String,
       fullName: row['full_name'] as String,
       birthday: DateTime.parse(row['birthday'] as String),
-      gender: row['gender'] as String,
+      gender: row['gender_status'] as String,
       barangay: row['barangay'] as String,
       sitio: row['sitio'] as String?,
       civilStatus: row['civil_status'] as String?,
@@ -74,12 +91,21 @@ class SupabaseAuthRepository implements AuthRepository {
       if (authUser == null) {
         throw const AuthException('Incorrect email or password.');
       }
-      return await _loadProfile(authUser.id);
+      try {
+        return await _loadProfile(authUser);
+      } catch (e, st) {
+        debugPrint('PROFILE LOAD ERROR: ${e.runtimeType}: $e\n$st');
+        // Don't leave a half-signed-in session behind.
+        await _client.auth.signOut();
+        throw const AuthException(
+            'Signed in, but your profile could not be loaded. Please try again.');
+      }
     } on AuthException {
       rethrow;
     } on sb.AuthException catch (e) {
       throw AuthException(_friendly(e.message));
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('LOGIN ERROR: ${e.runtimeType}: $e\n$st');
       throw const AuthException(
           'Could not reach the server. Check your connection and try again.');
     }
@@ -105,7 +131,7 @@ class SupabaseAuthRepository implements AuthRepository {
         data: {
           'full_name': fullName.trim(),
           'birthday': birthday,
-          'gender': genderStatus,
+          'gender_status': genderStatus,
           'sitio': loc.sitio,
           'barangay': loc.barangay,
         },
@@ -119,12 +145,13 @@ class SupabaseAuthRepository implements AuthRepository {
         throw const AuthException(
             'Account created. Please check your email to confirm it, then log in.');
       }
-      return await _loadProfile(authUser.id);
+      return await _loadProfile(authUser);
     } on AuthException {
       rethrow;
     } on sb.AuthException catch (e) {
       throw AuthException(_friendly(e.message));
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('REGISTER ERROR: ${e.runtimeType}: $e\n$st');
       throw const AuthException(
           'Could not reach the server. Check your connection and try again.');
     }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../data/profile_repository.dart';
@@ -19,8 +20,11 @@ class ProfileController extends ChangeNotifier {
     notifyListeners();
     try {
       _profile = await _repository.fetch();
-    } catch (_) {
+      debugPrint(
+          'PROFILE LOADED: name="${_profile.name}" barangay="${_profile.barangay}"');
+    } catch (e, st) {
       // Keep the empty profile; the user can still fill it in.
+      debugPrint('PROFILE LOAD ERROR: $e\n$st');
     } finally {
       _isLoading = false;
       notifyListeners();
