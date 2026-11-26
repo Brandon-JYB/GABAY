@@ -83,6 +83,7 @@ class _ProfileFormState extends State<ProfileForm> {
 
   late UserProfile _saved = _current;
   bool _saving = false;
+  bool _editing = false;
 
   @override
   void dispose() {
@@ -255,13 +256,79 @@ class _ProfileFormState extends State<ProfileForm> {
     try {
       await onSave(profile);
       if (!mounted) return;
-      setState(() => _saved = profile);
+      setState(() {
+        _saved = profile;
+        _editing = false;
+      });
       messenger.showSnackBar(SnackBar(content: Text(savedText)));
     } catch (_) {
       messenger.showSnackBar(SnackBar(content: Text(failedText)));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  Future<bool> _confirmSave() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Text(
+          dialogContext.tr('saveConfirmTitle'),
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            color: AppColors.phthalo,
+          ),
+        ),
+        content: Text(
+          dialogContext.tr('saveConfirmBody'),
+          style: const TextStyle(
+            color: AppColors.textMuted,
+            height: 1.4,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.deepSpace,
+            ),
+            child: Text(dialogContext.tr('cancel')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.deepSpace,
+            ),
+            child: Text(
+              dialogContext.tr('saveChanges'),
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+    return confirm ?? false;
+  }
+
+  Future<void> _onPrimaryPressed() async {
+    // Locked by default: first tap unlocks the form.
+    if (!_editing) {
+      setState(() => _editing = true);
+      return;
+    }
+    // Unlocked but nothing changed: tapping again locks it back.
+    if (!_isDirty) {
+      setState(() => _editing = false);
+      return;
+    }
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (!await _confirmSave()) return;
+    if (!mounted) return;
+    await _save();
   }
 
   Future<void> _logout() async {
@@ -332,6 +399,7 @@ class _ProfileFormState extends State<ProfileForm> {
         return TextFormField(
           controller: controller,
           focusNode: focusNode,
+          enabled: _editing,
           textInputAction: TextInputAction.next,
           validator: (text) => validator(match(text ?? '')),
           onChanged: (t) => onChanged(match(t)),
@@ -342,7 +410,9 @@ class _ProfileFormState extends State<ProfileForm> {
             suffix: IconButton(
               tooltip: 'Show all options',
               icon: const Icon(Icons.arrow_drop_down),
-              onPressed: () {
+              onPressed: !_editing
+                  ? null
+                  : () {
                 focusNode.requestFocus();
                 controller.value = const TextEditingValue(text: '');
                 onChanged(null);
@@ -427,6 +497,7 @@ class _ProfileFormState extends State<ProfileForm> {
                 _SectionLabel(context.tr('personalInfo')),
                 TextFormField(
                   controller: _name,
+                  enabled: _editing,
                   textCapitalization: TextCapitalization.words,
                   textInputAction: TextInputAction.next,
                   inputFormatters: [
@@ -443,8 +514,9 @@ class _ProfileFormState extends State<ProfileForm> {
                 gap,
                 TextFormField(
                   controller: _birthdayCtrl,
+                  enabled: _editing,
                   readOnly: true,
-                  onTap: _pickBirthday,
+                  onTap: _editing ? _pickBirthday : null,
                   validator: (_) => Validators.birthDate(_birthday),
                   decoration: _decoration(
                     context.tr('birthday'),
@@ -497,6 +569,7 @@ class _ProfileFormState extends State<ProfileForm> {
                 _SectionLabel(context.tr('address')),
                 TextFormField(
                   controller: _sitio,
+                  enabled: _editing,
                   textCapitalization: TextCapitalization.words,
                   textInputAction: TextInputAction.next,
                   inputFormatters: [
@@ -528,6 +601,7 @@ class _ProfileFormState extends State<ProfileForm> {
                     return TextFormField(
                       controller: controller,
                       focusNode: focusNode,
+                      enabled: _editing,
                       textCapitalization: TextCapitalization.words,
                       textInputAction: TextInputAction.next,
                       inputFormatters: [
@@ -545,7 +619,9 @@ class _ProfileFormState extends State<ProfileForm> {
                         suffix: IconButton(
                           tooltip: 'Show all barangays',
                           icon: const Icon(Icons.arrow_drop_down),
-                          onPressed: () {
+                          onPressed: !_editing
+                              ? null
+                              : () {
                             focusNode.requestFocus();
                             controller.value =
                             const TextEditingValue(text: '');
@@ -594,17 +670,23 @@ class _ProfileFormState extends State<ProfileForm> {
                   context.tr('assistanceInfo'),
                   icon: Icons.volunteer_activism_outlined,
                 ),
-                _SwitchCard(
-                  icon: Icons.accessible_outlined,
-                  title: context.tr('pwd'),
-                  subtitle:
-                  'Turn on if you need priority or accessible assistance.',
-                  value: _pwd ?? false,
-                  onChanged: (v) => setState(() => _pwd = v),
+                IgnorePointer(
+                  ignoring: !_editing,
+                  child: Opacity(
+                    opacity: _editing ? 1 : 0.6,
+                    child: _SwitchCard(
+                      icon: Icons.accessible_outlined,
+                      title: context.tr('pwd'),
+                      subtitle:
+                      'Turn on if you need priority or accessible assistance.',
+                      value: _pwd ?? false,
+                      onChanged: (v) => setState(() => _pwd = v),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 28),
                 FilledButton(
-                  onPressed: _saving ? null : _save,
+                  onPressed: _saving ? null : _onPrimaryPressed,
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.phthalo,
                     foregroundColor: Colors.white,
@@ -620,7 +702,13 @@ class _ProfileFormState extends State<ProfileForm> {
                     ),
                   )
                       : Text(
-                    context.tr('save'),
+                    context.tr(
+                      !_editing
+                          ? 'edit'
+                          : _isDirty
+                          ? 'saveChanges'
+                          : 'cancel',
+                    ),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,

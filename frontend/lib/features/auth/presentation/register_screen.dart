@@ -183,10 +183,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        if (auth.errorMessage != null) ...[
-                          AuthErrorBanner(message: auth.errorMessage!),
-                          const SizedBox(height: 14),
-                        ],
                         const _SectionHeader('Personal information'),
                         TextFormField(
                           controller: _nameCtrl,
@@ -484,6 +480,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700)),
                         ),
+                        if (auth.errorMessage != null) ...[
+                          const SizedBox(height: 14),
+                          AuthErrorBanner(message: auth.errorMessage!),
+                        ],
                         const SizedBox(height: 12),
                         TextButton(
                           style: TextButton.styleFrom(
